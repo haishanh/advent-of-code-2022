@@ -16,7 +16,7 @@ fn parse_row(input: &str) -> ((u32, u32), (u32, u32)) {
     (p1, p2)
 }
 
-pub fn part1() {
+pub fn part1() -> u32 {
     let content = fs::read_to_string("data/day4.txt").expect("expect file");
     let lines = content.lines();
     let mut count = 0;
@@ -26,10 +26,10 @@ pub fn part1() {
             count += 1;
         }
     }
-    println!("count={}", count);
+    count
 }
 
-pub fn part2() {
+pub fn part2() -> u32 {
     let content = fs::read_to_string("data/day4.txt").expect("expect file");
     let lines = content.lines();
     let mut count = 0;
@@ -39,5 +39,20 @@ pub fn part2() {
             count += 1;
         }
     }
-    println!("count={}", count);
+    count
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part_one() {
+        assert_eq!(573, part1());
+    }
+
+    #[test]
+    fn test_part_two() {
+        assert_eq!(867, part2());
+    }
 }

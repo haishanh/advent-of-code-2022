@@ -25,7 +25,7 @@ fn parse_drawing(lines: &mut Vec<&str>) -> Vec<Vec<u8>> {
             let bytes = line.as_bytes();
             for b in bytes {
                 if *b <= b'Z' && *b >= b'A' {
-                    // len of "[A] " is 4
+                    // len of string "[A] " is 4
                     chart[count / 4].push(*b);
                 }
                 count += 1;
@@ -40,21 +40,22 @@ fn parse_drawing(lines: &mut Vec<&str>) -> Vec<Vec<u8>> {
 // parse "move 1 from 2 to 3" into vector [1, 2, 3]
 fn parse_instruction(input: &str) -> Vec<usize> {
     let bytes = input.as_bytes();
-    let mut nums = Vec::new();
+    let mut digits = Vec::new();
     let mut result = Vec::new();
     for b in bytes {
         if *b >= b'0' && *b <= b'9' {
-            nums.push(*b);
-        } else if !nums.is_empty() {
-            let ret: usize = str::from_utf8(&nums[..]).unwrap().parse().unwrap();
-            nums.clear();
+            digits.push(*b);
+        } else if !digits.is_empty() {
+            let ret: usize = str::from_utf8(&digits[..]).unwrap().parse().unwrap();
+            digits.clear();
             result.push(ret);
         }
     }
 
-    if !nums.is_empty() {
-        let ret: usize = str::from_utf8(&nums[..]).unwrap().parse().unwrap();
-        nums.clear();
+    // in case the last byte is still a digit
+    if !digits.is_empty() {
+        let ret: usize = str::from_utf8(&digits[..]).unwrap().parse().unwrap();
+        digits.clear();
         result.push(ret);
     }
     result
@@ -84,8 +85,8 @@ fn run_instruction_part2(chart: &mut Vec<Vec<u8>>, instruction: &Vec<usize>) {
     chart[to].append(&mut u);
 }
 
-fn process(run_instruction: fn(&mut Vec<Vec<u8>>, &Vec<usize>)) -> String {
-    let content = fs::read_to_string("data/day5.txt").expect("expect file");
+fn process(run_instruction: fn(&mut Vec<Vec<u8>>, &Vec<usize>), filepath: &str) -> String {
+    let content = fs::read_to_string(filepath).expect("expect file");
     let lines = content.lines();
 
     let mut lines_iter = lines.into_iter();
@@ -120,11 +121,11 @@ fn process(run_instruction: fn(&mut Vec<Vec<u8>>, &Vec<usize>)) -> String {
 }
 
 pub fn part1() -> String {
-    process(run_instruction_part1)
+    process(run_instruction_part1, "data/day5.txt")
 }
 
 pub fn part2() -> String {
-    process(run_instruction_part2)
+    process(run_instruction_part2, "data/day5.txt")
 }
 
 #[cfg(test)]

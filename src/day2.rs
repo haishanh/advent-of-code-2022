@@ -35,20 +35,35 @@ fn calc_score_part2(row: &str) -> u32 {
     }
 }
 
-pub fn part1() {
+pub fn part1() -> u32 {
     let contents = fs::read_to_string("data/day2.txt").expect("expect file");
     let mut score = 0;
     for line in contents.lines() {
         score += calc_score_part1(line)
     }
-    println!("score={}", score);
+    score
 }
 
-pub fn part2() {
+pub fn part2() -> u32 {
     let contents = fs::read_to_string("data/day2.txt").expect("expect file");
     let mut score = 0;
     for line in contents.lines() {
         score += calc_score_part2(line)
     }
-    println!("score={}", score);
+    score
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part_one() {
+        assert_eq!(11449, part1());
+    }
+
+    #[test]
+    fn test_part_two() {
+        assert_eq!(13187, part2());
+    }
 }

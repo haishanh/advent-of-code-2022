@@ -63,17 +63,17 @@ fn find_common_of_groups(line0: &str, line1: &str, line2: &str) -> u32 {
     ret
 }
 
-pub fn part1() {
+pub fn part1() -> u32 {
     let contents = fs::read_to_string("data/day3.txt").expect("expect file");
     let mut total = 0;
     for line in contents.lines() {
         let s = find_common_item(line);
         total += s;
     }
-    println!("total={}", total);
+    total
 }
 
-pub fn part2() {
+pub fn part2() -> u32 {
     let contents = fs::read_to_string("data/day3.txt").expect("expect file");
     let mut total = 0;
     let mut lines = contents.lines();
@@ -84,5 +84,21 @@ pub fn part2() {
             break;
         }
     }
-    println!("total={}", total);
+    total
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part_one() {
+        assert_eq!(8123, part1());
+    }
+
+    #[test]
+    fn test_part_two() {
+        assert_eq!(2620, part2());
+    }
 }
