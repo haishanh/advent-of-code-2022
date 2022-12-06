@@ -5,6 +5,7 @@ mod day2;
 mod day3;
 mod day4;
 mod day5;
+mod day6;
 
 fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let args: Vec<String> = env::args().collect();
@@ -20,6 +21,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
         "4.2" => println!("{}", day4::part2()),
         "5.1" => println!("{}", day5::part1()),
         "5.2" => println!("{}", day5::part2()),
+        "6.1" => println!("{}", day6::part1()),
+        "6.2" => println!("{}", day6::part2()),
         _ => println!("{} not handled", which_puzzle),
     }
     Ok(())
