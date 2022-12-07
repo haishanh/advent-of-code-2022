@@ -12,7 +12,7 @@ enum Token {
     FileStat { size: u32 },
 }
 
-fn parse_cmd_dir<'a, I>(iter: &mut Peekable<I>) -> Token
+fn parse_dir_stat<'a, I>(iter: &mut Peekable<I>) -> Token
 where
     I: Iterator<Item = &'a u8>,
 {
@@ -57,7 +57,7 @@ where
                     iter.next();
                     return parse_cmd_cd(iter);
                 } else {
-                    panic!("invlaid input");
+                    panic!("invalid input");
                 }
             }
             Some(&&b'l') => {
@@ -67,10 +67,10 @@ where
                     iter.next();
                     return Token::Ls;
                 } else {
-                    panic!("invlaid input");
+                    panic!("invalid input");
                 }
             }
-            _ => panic!("invlaid input"),
+            _ => panic!("invalid input"),
         }
     }
 }
@@ -118,17 +118,17 @@ where
         iter.next();
         iter.next();
         iter.next();
-        return parse_cmd_dir(iter);
+        return parse_dir_stat(iter);
     }
 
     if **b >= b'0' && **b <= b'9' {
         return parse_file_stat(iter);
     } else {
-        panic!("invlaid input");
+        panic!("invalid input");
     }
 }
 
-fn scan(cnt: String) -> Vec<Token> {
+fn tokenize(cnt: String) -> Vec<Token> {
     let mut v = Vec::new();
     let lines = cnt.lines();
     for line in lines {
@@ -198,14 +198,14 @@ fn calc_part2(dirs: &Vec<Rc<RefCell<u32>>>) -> u32 {
 
 pub fn part1(filepath: &str) -> u32 {
     let content = fs::read_to_string(filepath).expect("expect file");
-    let tokens = scan(content);
+    let tokens = tokenize(content);
     let dirs = scan_tokens(&tokens);
     calc_part1(&dirs)
 }
 
 pub fn part2(filepath: &str) -> u32 {
     let content = fs::read_to_string(filepath).expect("expect file");
-    let tokens = scan(content);
+    let tokens = tokenize(content);
     let dirs = scan_tokens(&tokens);
     calc_part2(&dirs)
 }
