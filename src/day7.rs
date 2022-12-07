@@ -140,12 +140,7 @@ fn scan(cnt: String) -> Vec<Token> {
     v
 }
 
-#[derive(Debug, Clone)]
-struct SimpleDir {
-    size: u32,
-}
-
-fn scan_tokens(tokens: &Vec<Token>) -> Vec<Rc<RefCell<SimpleDir>>> {
+fn scan_tokens(tokens: &Vec<Token>) -> Vec<Rc<RefCell<u32>>> {
     let mut all = Vec::new();
     let mut chain = Vec::new();
     for t in tokens {
@@ -155,16 +150,16 @@ fn scan_tokens(tokens: &Vec<Token>) -> Vec<Rc<RefCell<SimpleDir>>> {
                 if &name[..] == ".." {
                     chain.pop();
                 } else {
-                    let r = Rc::new(RefCell::new(SimpleDir { size: 0 }));
-                    all.push(Rc::clone(&r));
-                    chain.push(Rc::clone(&r));
+                    let dir_size = Rc::new(RefCell::new(0));
+                    all.push(Rc::clone(&dir_size));
+                    chain.push(Rc::clone(&dir_size));
                 }
             }
             Token::Dir(_name) => {}
             Token::FileStat { size } => {
                 for s in chain.iter() {
                     let mut x = s.borrow_mut();
-                    x.size += *size;
+                    *x += *size;
                 }
             }
         }
@@ -172,22 +167,22 @@ fn scan_tokens(tokens: &Vec<Token>) -> Vec<Rc<RefCell<SimpleDir>>> {
     all
 }
 
-fn calc_part1(dirs: &Vec<Rc<RefCell<SimpleDir>>>) -> u32 {
+fn calc_part1(dirs: &Vec<Rc<RefCell<u32>>>) -> u32 {
     let mut nums = Vec::new();
     for i in dirs {
-        let x = i.borrow();
-        if x.size <= 100000 {
-            nums.push(x.size);
+        let dir_size = i.borrow();
+        if *dir_size <= 100000 {
+            nums.push(*dir_size);
         }
     }
     nums.iter().sum()
 }
 
-fn calc_part2(dirs: &Vec<Rc<RefCell<SimpleDir>>>) -> u32 {
+fn calc_part2(dirs: &Vec<Rc<RefCell<u32>>>) -> u32 {
     let mut nums = Vec::new();
     for i in dirs {
-        let x = i.borrow();
-        nums.push(x.size);
+        let dir_size = i.borrow();
+        nums.push(*dir_size);
     }
     nums.sort();
     let root = nums.pop().unwrap();
