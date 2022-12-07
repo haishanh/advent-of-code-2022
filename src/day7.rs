@@ -12,7 +12,7 @@ enum Token {
     FileStat { size: u32 },
 }
 
-fn parse_dir_stat<'a, I>(iter: &mut Peekable<I>) -> Token
+fn parse_string<'a, I>(iter: &mut Peekable<I>) -> String
 where
     I: Iterator<Item = &'a u8>,
 {
@@ -22,23 +22,21 @@ where
             bytes.push(*b);
         }
     }
-    let s = str::from_utf8(&bytes).unwrap();
-    Token::Dir(s.to_owned())
+    str::from_utf8(&bytes).unwrap().to_owned()
+}
+
+fn parse_dir_stat<'a, I>(iter: &mut Peekable<I>) -> Token
+where
+    I: Iterator<Item = &'a u8>,
+{
+    Token::Dir(parse_string(iter))
 }
 
 fn parse_cmd_cd<'a, I>(iter: &mut Peekable<I>) -> Token
 where
     I: Iterator<Item = &'a u8>,
 {
-    let mut bytes = Vec::new();
-    for b in iter {
-        if *b != b' ' {
-            bytes.push(*b);
-        }
-    }
-
-    let s = str::from_utf8(&bytes).unwrap();
-    Token::Cd(s.to_owned())
+    Token::Cd(parse_string(iter))
 }
 
 fn parse_cmd<'a, I>(iter: &mut Peekable<I>) -> Token
