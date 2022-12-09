@@ -16,40 +16,27 @@ fn move_tail(head: &Position, tail: &mut Position) {
 
     if x_diff == 2 {
         tail.x += 1;
-        tail.y += if y_diff >= 1 {
-            1
-        } else if y_diff <= -1 {
-            -1
-        } else {
-            0
-        }
+        tail.y += calc_move(y_diff);
     } else if x_diff == -2 {
         tail.x += -1;
-        tail.y += if y_diff >= 1 {
-            1
-        } else if y_diff <= -1 {
-            -1
-        } else {
-            0
-        }
+        tail.y += calc_move(y_diff);
     } else if y_diff == 2 {
         tail.y += 1;
-        tail.x += if x_diff >= 1 {
-            1
-        } else if x_diff <= -1 {
-            -1
-        } else {
-            0
-        }
+        tail.x += calc_move(x_diff);
     } else if y_diff == -2 {
         tail.y += -1;
-        tail.x += if x_diff >= 1 {
-            1
-        } else if x_diff <= -1 {
-            -1
-        } else {
-            0
-        }
+        tail.x += calc_move(x_diff);
+    }
+}
+
+#[inline]
+fn calc_move(diff: i32) -> i32 {
+    if diff >= 1 {
+        1
+    } else if diff <= -1 {
+        -1
+    } else {
+        0
     }
 }
 
