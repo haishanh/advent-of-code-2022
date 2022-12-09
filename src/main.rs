@@ -1,3 +1,5 @@
+#![feature(test)]
+
 use std::env;
 
 mod day1;
@@ -8,6 +10,7 @@ mod day5;
 mod day6;
 mod day7;
 mod day8;
+mod day9;
 
 fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let args: Vec<String> = env::args().collect();
@@ -29,6 +32,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
         "7.2" => println!("{}", day7::part2("data/day7.txt")),
         "8.1" => println!("{}", day8::part1("data/day8.txt")),
         "8.2" => println!("{}", day8::part2("data/day8.txt")),
+        "9.1" => println!("{}", day9::part1("data/day9.txt")),
+        "9.2" => println!("{}", day9::part2("data/day9.txt")),
         _ => println!("{} not handled", which_puzzle),
     }
     Ok(())
