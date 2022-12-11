@@ -12,6 +12,7 @@ mod day7;
 mod day8;
 mod day9;
 mod day10;
+mod day11;
 
 fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let args: Vec<String> = env::args().collect();
@@ -37,6 +38,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
         "9.2" => println!("{}", day9::part2("data/day9.txt")),
         "10.1" => println!("{}", day10::part1("data/day10-sample.txt")),
         "10.2" => println!("{}", day10::part2("data/day10.txt")),
+        "11.1" => println!("{}", day11::part1("data/day11.txt")),
+        "11.2" => println!("{}", day11::part2("data/day11.txt")),
         _ => println!("{} not handled", which_puzzle),
     }
     Ok(())
