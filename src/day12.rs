@@ -49,9 +49,14 @@ fn find_path(grid: &Vec<Vec<u8>>, starts: Vec<(usize, usize)>, stop: (usize, usi
     let mut step = 0;
     let mut max_step = 0;
 
-    let mut seen = HashSet::new();
     let row_bound = grid.len() - 1;
     let col_bound = grid[0].len() - 1;
+
+    let mut seen = HashSet::new();
+    for p in frontiers.iter() {
+        seen.insert(*p);
+    }
+
     loop {
         let mut next_frontiers = Vec::new();
         // if step <= 5 {
