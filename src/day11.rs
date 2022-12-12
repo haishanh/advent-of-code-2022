@@ -24,29 +24,33 @@ struct MonkeyState {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct SimpleBigNumber {
+struct SimpleBigInt {
     value: Vec<u32>,
+    base: u32,
 }
 
-const BASE: u32 = 1000;
-
 /// not necessary!
-impl SimpleBigNumber {
-    fn new(x: u32) -> Self {
+impl SimpleBigInt {
+    fn new(x: u32, base: u32) -> Self {
         let mut value = Vec::new();
         let mut dividend = x;
         loop {
-            let reminder = dividend % BASE;
-            dividend = dividend / BASE;
+            let reminder = dividend % base;
+            dividend = dividend / base;
             value.push(reminder);
             if dividend == 0 {
                 break;
             }
         }
-        SimpleBigNumber { value }
+        SimpleBigInt { value, base }
     }
 
-    fn add(&self, rhs: &SimpleBigNumber) -> SimpleBigNumber {
+    fn add(&self, rhs: &SimpleBigInt) -> SimpleBigInt {
+        let base = self.base;
+        if rhs.base != base {
+            panic!("Mixing base is not supported");
+        }
+
         let mut value = Vec::new();
         let mut i = self.value.iter();
         let mut j = rhs.value.iter();
@@ -59,18 +63,18 @@ impl SimpleBigNumber {
             match (iv, jv) {
                 (Some(a), Some(b)) => {
                     let ret = *a + *b + overflow;
-                    overflow = ret / BASE;
-                    value.push(ret % BASE);
+                    overflow = ret / base;
+                    value.push(ret % base);
                 }
                 (Some(a), None) => {
                     let ret = *a + overflow;
-                    overflow = ret / BASE;
-                    value.push(ret % BASE);
+                    overflow = ret / base;
+                    value.push(ret % base);
                 }
                 (None, Some(b)) => {
                     let ret = *b + overflow;
-                    overflow = ret / BASE;
-                    value.push(ret % BASE);
+                    overflow = ret / base;
+                    value.push(ret % base);
                 }
                 (None, None) => {
                     if overflow > 0 {
@@ -81,10 +85,14 @@ impl SimpleBigNumber {
             }
         }
 
-        SimpleBigNumber { value }
+        SimpleBigInt { value, base }
     }
 
-    fn mul(&self, rhs: &SimpleBigNumber) -> SimpleBigNumber {
+    fn mul(&self, rhs: &SimpleBigInt) -> SimpleBigInt {
+        let base = self.base;
+        if rhs.base != base {
+            panic!("Mixing base is not supported");
+        }
         let mut values = Vec::new();
         let mut count = 0;
         for a in self.value.iter() {
@@ -95,17 +103,20 @@ impl SimpleBigNumber {
             }
             for b in rhs.value.iter() {
                 let ret = *a * *b + overflow;
-                overflow = ret / BASE;
-                value.push(ret % BASE);
+                overflow = ret / base;
+                value.push(ret % base);
             }
             if overflow > 0 {
                 value.push(overflow);
             }
-            values.push(SimpleBigNumber { value });
+            values.push(SimpleBigInt { value, base });
             count += 1;
         }
 
-        let mut ret = SimpleBigNumber { value: vec![0] };
+        let mut ret = SimpleBigInt {
+            value: vec![0],
+            base,
+        };
         for i in values.iter() {
             // println!("{:?}", i);
             ret = ret.add(i);
@@ -114,13 +125,14 @@ impl SimpleBigNumber {
     }
 
     fn rem(&self, rhs: u32) -> u32 {
+        let base = self.base;
         let mut value = self.value.clone();
 
         loop {
             if let Some(v) = value.pop() {
                 let r = v % rhs;
                 if let Some(u) = value.pop() {
-                    value.push(r * BASE + u);
+                    value.push(r * base + u);
                 } else {
                     return r;
                 }
@@ -244,7 +256,7 @@ where
     monkeys
 }
 
-fn play(monkeys: &mut Vec<MonkeyState>, divisor: u64) {
+fn play(monkeys: &mut Vec<MonkeyState>, f: impl Fn(u64) -> u64) {
     let iter = monkeys.iter();
     for m in iter {
         let starts = m.starts.take();
@@ -256,7 +268,7 @@ fn play(monkeys: &mut Vec<MonkeyState>, divisor: u64) {
                 (MonkeyOperator::Multiply, MonkeyOperand::Old) => level * level,
                 (MonkeyOperator::Multiply, MonkeyOperand::Number(n)) => level * n,
             };
-            next_level = next_level % divisor;
+            next_level = f(next_level);
             let reminder = next_level % m.test.0;
             if reminder == 0 {
                 monkeys[m.test.1 as usize]
@@ -279,7 +291,7 @@ pub fn part1(filepath: &str) -> u64 {
     let mut monkeys = parse(&mut iter);
 
     for _i in 0..20 {
-        play(&mut monkeys, 3);
+        play(&mut monkeys, |v| v / 3);
     }
     // viz(&monkeys);
     let mut x: Vec<u64> = monkeys.iter().map(|x| x.inspected_count.take()).collect();
@@ -299,13 +311,13 @@ pub fn part2(filepath: &str) -> u64 {
     let mut iter = bytes.iter().peekable();
     let mut monkeys = parse(&mut iter);
 
-    let mut x = 1;
+    let mut common_multiple = 1;
     for i in monkeys.iter() {
-        x = x * i.test.0
+        common_multiple = common_multiple * i.test.0
     }
 
     for _i in 0..10000 {
-        play(&mut monkeys, x);
+        play(&mut monkeys, |v| v % common_multiple);
     }
     // viz(&monkeys);
     let mut x: Vec<u64> = monkeys.iter().map(|x| x.inspected_count.take()).collect();
@@ -318,8 +330,45 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_part1() {
+        assert_eq!(10605, part1("data/day11-sample.txt"));
+        assert_eq!(112221, part1("data/day11.txt"));
+    }
+
+    #[test]
     fn test_part2() {
         assert_eq!(2713310158, part2("data/day11-sample.txt"));
         assert_eq!(25272176808, part2("data/day11.txt"));
+    }
+
+    #[test]
+    fn simple_big_int() {
+        let a = SimpleBigInt::new(9876, 10);
+        assert_eq!(
+            SimpleBigInt {
+                value: vec![6, 7, 8, 9],
+                base: 10,
+            },
+            a
+        );
+        let b = SimpleBigInt::new(8765, 10);
+        assert_eq!(
+            // 18641
+            SimpleBigInt {
+                value: vec![1, 4, 6, 8, 1],
+                base: 10,
+            },
+            a.add(&b)
+        );
+        let b = SimpleBigInt::new(8765, 10);
+        assert_eq!(
+            // 86563140
+            SimpleBigInt {
+                value: vec![0, 4, 1, 3, 6, 5, 6, 8],
+                base: 10,
+            },
+            a.mul(&b)
+        );
+        assert_eq!(9, a.rem(13));
     }
 }
