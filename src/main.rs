@@ -3,6 +3,9 @@
 use std::env;
 
 mod day1;
+mod day10;
+mod day11;
+mod day12;
 mod day2;
 mod day3;
 mod day4;
@@ -11,8 +14,6 @@ mod day6;
 mod day7;
 mod day8;
 mod day9;
-mod day10;
-mod day11;
 
 fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     let args: Vec<String> = env::args().collect();
@@ -40,6 +41,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
         "10.2" => println!("{}", day10::part2("data/day10.txt")),
         "11.1" => println!("{}", day11::part1("data/day11.txt")),
         "11.2" => println!("{}", day11::part2("data/day11.txt")),
+        "12.1" => println!("{}", day12::part1("data/day12.txt")),
+        "12.2" => println!("{}", day12::part2("data/day12.txt")),
         _ => println!("{} not handled", which_puzzle),
     }
     Ok(())

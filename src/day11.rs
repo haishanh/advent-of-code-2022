@@ -30,6 +30,7 @@ struct SimpleBigInt {
 }
 
 /// not necessary!
+#[allow(dead_code)]
 impl SimpleBigInt {
     fn new(x: u32, base: u32) -> Self {
         let mut value = Vec::new();
