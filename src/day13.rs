@@ -9,12 +9,6 @@ enum Node {
     Empty,
 }
 
-enum CompareResult {
-    Gt,
-    Lt,
-    Eq,
-}
-
 fn parse_line(line: &str) -> Vec<Node> {
     let mut vec_stack: Vec<Vec<Node>> = Vec::new();
     let mut bytes = line.bytes();
@@ -56,72 +50,63 @@ fn parse_line(line: &str) -> Vec<Node> {
     Vec::new()
 }
 
-fn compare_vectors(a: &Vec<Node>, b: &Vec<Node>) -> CompareResult {
+fn compare_vectors(a: &Vec<Node>, b: &Vec<Node>) -> Ordering {
     let mut ai = a.iter();
     let mut bi = b.iter();
     loop {
         let (ax, bx) = (ai.next(), bi.next());
         match (ax, bx) {
             (None, None) => {
-                return CompareResult::Eq;
+                return Ordering::Equal;
             }
             (None, Some(_)) => {
-                return CompareResult::Lt;
+                return Ordering::Less;
             }
             (Some(_), None) => {
-                return CompareResult::Gt;
+                return Ordering::Greater;
             }
             (Some(l), Some(r)) => match (l, r) {
                 (Node::Number(lb), Node::Number(rb)) => {
                     if **lb < **rb {
-                        return CompareResult::Lt;
+                        return Ordering::Less;
                     } else if **lb > **rb {
-                        return CompareResult::Gt;
+                        return Ordering::Greater;
                     }
                 }
                 (Node::Empty, Node::Empty) => {}
                 (Node::Empty, Node::Number(_) | Node::List(_)) => {
-                    return CompareResult::Lt;
+                    return Ordering::Less;
                 }
                 (Node::Number(_) | Node::List(_), Node::Empty) => {
-                    return CompareResult::Gt;
+                    return Ordering::Greater;
                 }
                 (Node::Number(lb), Node::List(rb)) => {
                     let x = vec![Node::Number(Box::new(**lb))];
                     let result = compare_vectors(&x, &*rb);
                     match result {
-                        CompareResult::Gt => {
-                            return CompareResult::Gt;
+                        Ordering::Equal => {}
+                        _ => {
+                            return result;
                         }
-                        CompareResult::Lt => {
-                            return CompareResult::Lt;
-                        }
-                        CompareResult::Eq => {}
                     }
                 }
                 (Node::List(lb), Node::Number(rb)) => {
                     let x = vec![Node::Number(Box::new(**rb))];
                     let result = compare_vectors(&*lb, &x);
                     match result {
-                        CompareResult::Gt => {
-                            return CompareResult::Gt;
+                        Ordering::Equal => {}
+                        _ => {
+                            return result;
                         }
-                        CompareResult::Lt => {
-                            return CompareResult::Lt;
-                        }
-                        CompareResult::Eq => {}
                     }
                 }
                 (Node::List(lb), Node::List(rb)) => {
                     let result = compare_vectors(&*lb, &*rb);
                     match result {
-                        CompareResult::Gt => {
-                            return CompareResult::Gt;
+                        Ordering::Equal => {}
+                        _ => {
+                            return result;
                         }
-                        CompareResult::Lt => {
-                            return CompareResult::Lt;
-                        }
-                        CompareResult::Eq => {}
                     }
                 }
             },
@@ -148,7 +133,7 @@ fn parse_file(filepath: &str) -> u32 {
             pair_idx += 1;
             let a = buf.pop().unwrap();
             match compare_vectors(&a, &v) {
-                CompareResult::Lt => {
+                Ordering::Less => {
                     pair_in_order.push(pair_idx);
                 }
                 _ => {}
@@ -199,14 +184,7 @@ fn read_to_sorted_packets(filepath: &str) -> Vec<Packet> {
         is_divider: true,
     });
 
-    buf.sort_by(|a, b| {
-        let ret = compare_vectors(&a.inner, &b.inner);
-        match ret {
-            CompareResult::Gt => Ordering::Greater,
-            CompareResult::Lt => Ordering::Less,
-            CompareResult::Eq => Ordering::Equal,
-        }
-    });
+    buf.sort_by(|a, b| compare_vectors(&a.inner, &b.inner));
     buf
 }
 
