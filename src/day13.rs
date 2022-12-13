@@ -20,7 +20,7 @@ fn parse_line(line: &str) -> Vec<Node> {
             b'[' => {
                 vec_stack.push(Vec::new());
             }
-            b']' => {
+            b']' | b',' => {
                 if !digits.is_empty() {
                     let n: u32 = str::from_utf8(&digits).unwrap().parse().unwrap();
                     digits.clear();
@@ -28,26 +28,25 @@ fn parse_line(line: &str) -> Vec<Node> {
                 }
                 let mut current = vec_stack.pop().unwrap();
                 current.push(prev_element);
-                if vec_stack.is_empty() {
-                    return current;
+
+                match b {
+                    b']' => {
+                        if vec_stack.is_empty() {
+                            return current;
+                        }
+                        prev_element = Node::List(Box::new(current));
+                    }
+                    _ => {
+                        prev_element = Node::Empty;
+                        vec_stack.push(current);
+                    }
                 }
-                prev_element = Node::List(Box::new(current));
-            }
-            b',' => {
-                if !digits.is_empty() {
-                    let n: u32 = str::from_utf8(&digits).unwrap().parse().unwrap();
-                    digits.clear();
-                    prev_element = Node::Number(Box::new(n));
-                }
-                let mut current = vec_stack.pop().unwrap();
-                current.push(prev_element);
-                prev_element = Node::Empty;
-                vec_stack.push(current);
             }
             _ => digits.push(b),
         }
     }
-    Vec::new()
+
+    panic!("Invalid line");
 }
 
 fn compare_vectors(a: &Vec<Node>, b: &Vec<Node>) -> Ordering {
