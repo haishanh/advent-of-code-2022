@@ -187,7 +187,7 @@ fn read_to_sorted_packets(filepath: &str) -> Vec<Packet> {
     buf
 }
 
-fn find_divier(a: &Vec<Packet>) -> Vec<u32> {
+fn find_divider(a: &Vec<Packet>) -> Vec<u32> {
     let mut idx = 1;
     let mut divider_idx = Vec::new();
     for item in a {
@@ -201,7 +201,7 @@ fn find_divier(a: &Vec<Packet>) -> Vec<u32> {
 
 pub fn part2(filepath: &str) -> u32 {
     let buf = read_to_sorted_packets(filepath);
-    let divider_idx = find_divier(&buf);
+    let divider_idx = find_divider(&buf);
     divider_idx.iter().product()
 }
 
@@ -230,10 +230,10 @@ mod tests {
     #[test]
     fn test_part2() {
         let buf = read_to_sorted_packets("data/day13-sample.txt");
-        let divider_idx = find_divier(&buf);
+        let divider_idx = find_divider(&buf);
         assert_eq!([10, 14], &divider_idx[..]);
         let buf = read_to_sorted_packets("data/day13.txt");
-        let divider_idx = find_divier(&buf);
+        let divider_idx = find_divider(&buf);
         assert_eq!([117, 192], &divider_idx[..]);
     }
 }

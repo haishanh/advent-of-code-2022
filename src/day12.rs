@@ -47,7 +47,7 @@ fn find_path(grid: &Vec<Vec<u8>>, starts: Vec<(usize, usize)>, stop: (usize, usi
     let mut frontiers = starts;
 
     let mut step = 0;
-    let mut max_step = 0;
+    let mut min_step = 0;
 
     let row_bound = grid.len() - 1;
     let col_bound = grid[0].len() - 1;
@@ -64,7 +64,7 @@ fn find_path(grid: &Vec<Vec<u8>>, starts: Vec<(usize, usize)>, stop: (usize, usi
         // }
         for point in frontiers {
             if point == stop {
-                max_step = step;
+                min_step = step;
                 break;
             }
             let x = point.0;
@@ -88,14 +88,14 @@ fn find_path(grid: &Vec<Vec<u8>>, starts: Vec<(usize, usize)>, stop: (usize, usi
                 next_frontiers.push((x, y + 1));
             }
         }
-        if max_step > 0 {
+        if min_step > 0 {
             break;
         }
 
         frontiers = next_frontiers;
         step += 1;
     }
-    max_step
+    min_step
 }
 
 pub fn part1(filepath: &str) -> u32 {
