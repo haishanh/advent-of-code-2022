@@ -153,6 +153,16 @@ struct Packet {
     is_divider: bool,
 }
 
+#[inline]
+fn make_divider_packet(v: u32) -> Packet {
+    let number_node = Node::Number(Box::new(v));
+    let node = vec![Node::List(Box::new(vec![number_node]))];
+    Packet {
+        inner: node,
+        is_divider: true,
+    }
+}
+
 fn read_to_sorted_packets(filepath: &str) -> Vec<Packet> {
     let cnt = fs::read_to_string(filepath).unwrap();
     let mut buf = Vec::new();
@@ -162,26 +172,15 @@ fn read_to_sorted_packets(filepath: &str) -> Vec<Packet> {
             count = 0;
             continue;
         }
-        let v = parse_line(line);
         buf.push(Packet {
-            inner: v,
+            inner: parse_line(line),
             is_divider: false,
         });
         count += 1;
     }
 
-    let two = Node::Number(Box::new(2));
-    let wrapped_two = vec![Node::List(Box::new(vec![two]))];
-    buf.push(Packet {
-        inner: wrapped_two,
-        is_divider: true,
-    });
-    let six = Node::Number(Box::new(6));
-    let wrapped_six = vec![Node::List(Box::new(vec![six]))];
-    buf.push(Packet {
-        inner: wrapped_six,
-        is_divider: true,
-    });
+    buf.push(make_divider_packet(2));
+    buf.push(make_divider_packet(6));
 
     buf.sort_by(|a, b| compare_vectors(&a.inner, &b.inner));
     buf
