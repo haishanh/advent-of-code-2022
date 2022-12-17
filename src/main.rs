@@ -10,6 +10,7 @@ mod day13;
 mod day14;
 mod day15;
 mod day16;
+mod day17;
 mod day2;
 mod day3;
 mod day4;
@@ -55,6 +56,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
         "15.2" => println!("{:?}", day15::part2("data/day15.txt", 4000000)),
         "16.1" => println!("{}", day16::part1("data/day16-sample.txt")),
         "16.2" => println!("{:?}", day16::part2("data/day16.txt")),
+        "17.1" => println!("{:?}", day17::part1("data/day17-sample.txt")),
+        "17.2" => println!("{:?}", day17::part2("data/day17-sample.txt")),
         _ => println!("{} not handled", which_puzzle),
     }
     Ok(())
