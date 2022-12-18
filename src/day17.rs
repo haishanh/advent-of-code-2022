@@ -1,5 +1,6 @@
-use std::{fs, str};
+use std::{collections::HashMap, fs, str};
 
+#[derive(Clone)]
 enum Direction {
     Left,
     Right,
@@ -37,15 +38,20 @@ fn rock_only_move(rock: &mut Vec<u8>, dir: &Direction) {
     }
 }
 
-// fn move_rock(rock: &mut Vec<u8>, dir: Direction) {}
-
-fn simulate<'a, BI, RI>(chamber: &mut Vec<u8>, bytes: &mut BI, rocks: &mut RI,
-    rock_generation: u32,
-)
+fn simulate<'a, BI, RI>(
+    chamber: &mut Vec<u8>,
+    bytes: &mut BI,
+    rocks: &mut RI,
+    rock_generation: u64,
+) -> u64
 where
     BI: Iterator<Item = &'a Direction>,
     RI: Iterator<Item = Vec<u8>>,
 {
+    let mut pattern_map = HashMap::new();
+
+    let mut skipped = 0;
+
     let mut step_to_rest = 0;
     let mut rock = rocks.next().unwrap().clone();
     for _i in 0..rock.len() {
@@ -53,19 +59,7 @@ where
     }
     let mut count = 1;
     loop {
-        // chamber.pop();
         let dir = bytes.next().unwrap();
-        // println!(
-        //     "{} {} {:?}",
-        //     step_to_rest,
-        //     str::from_utf8(&[dirb]).unwrap(),
-        //     rock
-        // );
-        // let dir = match dirb {
-        //     b'>' => Direction::Right,
-        //     b'<' => Direction::Left,
-        //     _ => panic!("Invalid input"),
-        // };
 
         step_to_rest += 1;
         if step_to_rest < 4 {
@@ -123,6 +117,39 @@ where
                     *c = *c | *r;
                 }
                 step_to_rest = 0;
+                remove_all_floating_zeros(chamber);
+
+                if count % 5 == 0 {
+                    let chamber_iter = chamber.iter().rev();
+                    // let mut c = 0;
+                    let mut pattern = Vec::new();
+                    for b in chamber_iter {
+                        pattern.push(*b);
+                        if pattern.len() == 20 {
+                            break;
+                        }
+                    }
+
+                    if let Some((prev_count, prev_height)) = pattern_map.get(&pattern) {
+                        let current = (count, chamber.len());
+
+                        let repeat_count = current.0 - *prev_count;
+                        let repeat_height = current.1 - *prev_height;
+
+                        let remain_count = rock_generation - count;
+
+                        let repeat_cycles: u64 = remain_count / repeat_count;
+                        // let repeat_remain = remain_count - (repeat_cycles * repeat_count);
+
+                        skipped = (repeat_height as u64) * repeat_cycles;
+                        count += repeat_cycles * repeat_count;
+
+                        pattern_map.clear();
+                    } else {
+                        pattern_map.insert(pattern, (count, chamber.len()));
+                    }
+                }
+
                 count += 1;
 
                 // print_chamber(chamber);
@@ -132,7 +159,6 @@ where
                     break;
                 }
                 rock = rocks.next().unwrap().clone();
-                remove_all_floating_zeros(chamber);
 
                 for _i in 0..rock.len() {
                     chamber.push(0);
@@ -144,9 +170,11 @@ where
             _ => {}
         }
     }
+
+    skipped
 }
 
-pub fn part1(filepath: &str) -> usize {
+fn parse_file(filepath: &str) -> (Vec<Vec<u8>>, Vec<Direction>) {
     let bytes = fs::read(filepath).unwrap();
     let mut dirs = Vec::new();
     for b in bytes {
@@ -156,33 +184,65 @@ pub fn part1(filepath: &str) -> usize {
             _ => {}
         }
     }
-    let x = dirs.len();
-    let mut rocks = vec![
-        vec![0b001111_0],
-        vec![0b000_1_000, 0b00_111_00, 0b000_1_000],
-        vec![0b00_111_00, 0b0000_1_00, 0b0000_1_00],
-        vec![0b00_1_0000, 0b00_1_0000, 0b00_1_0000, 0b00_1_0000],
-        vec![0b00_11_000, 0b00_11_000],
-    ]
-    .into_iter()
-    .cycle();
 
-    // println!("{}", 5 * x);
-
-    let mut chamber = Vec::new();
-    chamber.push(0b1_111_111);
-    let mut dirs_iter = dirs.iter().cycle();
-
-    simulate(&mut chamber, &mut dirs_iter, &mut rocks, 2023);
-
-    // simulate(&mut chamber, &mut dirs_iter, &mut rocks, 2022 - (9* 205) + 1);
-    remove_all_floating_zeros(&mut chamber);
-
-    // print_chamber(&mut chamber);
-
-    chamber.len() - 1
+    (
+        vec![
+            vec![0b001111_0],
+            vec![0b000_1_000, 0b00_111_00, 0b000_1_000],
+            vec![0b00_111_00, 0b0000_1_00, 0b0000_1_00],
+            vec![0b00_1_0000, 0b00_1_0000, 0b00_1_0000, 0b00_1_0000],
+            vec![0b00_11_000, 0b00_11_000],
+        ],
+        dirs,
+    )
 }
 
+fn calc2<'a, BI, RI>(dirs_iter: &mut BI, rocks: &mut RI, rock_generation: u64) -> u64
+where
+    BI: Iterator<Item = &'a Direction>,
+    RI: Iterator<Item = Vec<u8>>,
+{
+    let mut chamber = Vec::new();
+    chamber.push(0b1_111_111);
+    let skipped = simulate(&mut chamber, dirs_iter, rocks, rock_generation);
+    remove_all_floating_zeros(&mut chamber);
+    // println!("skipped={}", skipped);
+    chamber.len() as u64 - 1 + skipped
+}
+
+fn calc<'a, BI, RI>(
+    chamber: &mut Vec<u8>,
+    dirs_iter: &mut BI,
+    rocks: &mut RI,
+    rock_generation: u64,
+) -> usize
+where
+    BI: Iterator<Item = &'a Direction>,
+    RI: Iterator<Item = Vec<u8>>,
+{
+    simulate(chamber, dirs_iter, rocks, rock_generation);
+    remove_all_floating_zeros(chamber);
+    chamber.len()
+}
+
+fn process(filepath: &str, rock_generation: u64) -> u64 {
+    let (rocks_vec, dirs_vec) = parse_file(filepath);
+    let mut rocks = rocks_vec.into_iter().cycle();
+    let mut dirs_iter = dirs_vec.iter().cycle();
+    calc2(&mut dirs_iter, &mut rocks, rock_generation  + 1)
+}
+
+pub fn part1(filepath: &str) -> u64 {
+    process(filepath, 2022)
+    // let (rocks_vec, dirs_vec) = parse_file(filepath);
+    // let mut rocks = rocks_vec.into_iter().cycle();
+    // let mut dirs_iter = dirs_vec.iter().cycle();
+    // calc2(&mut dirs_iter, &mut rocks, 1000000000000 as u64 + 1)
+}
+
+pub fn part2(filepath: &str) -> u64 {
+    process(filepath, 1000000000000)
+}
 
 #[inline]
 fn remove_all_floating_zeros(chamber: &mut Vec<u8>) {
@@ -201,10 +261,6 @@ fn print_chamber(chamber: &mut Vec<u8>) {
     for i in chamber.iter().rev() {
         println!("{:#09b}", *i);
     }
-}
-
-pub fn part2(filepath: &str) -> u32 {
-    0
 }
 
 #[cfg(test)]
@@ -226,5 +282,17 @@ mod tests {
         assert_eq!(vec![0b1], rock);
         rock_only_move(&mut rock, &Direction::Right);
         assert_eq!(vec![0b1], rock);
+    }
+
+    #[test]
+    fn test_part1() {
+        assert_eq!(3068, part1("data/day17-sample.txt"));
+        assert_eq!(3119, part1("data/day17.txt"));
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(1514285714288, part2("data/day17-sample.txt"));
+        assert_eq!(1536994219669, part2("data/day17.txt"));
     }
 }
